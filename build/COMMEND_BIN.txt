@@ -1,0 +1,524 @@
+##########################################################
+#               DOCKER COMMANDS                          #
+##########################################################
+
+# Test vSphere automation sdk rest 
+# https://www.youtube.com/watch?v=nr3pJovtbzM > vSphere 6.5 RESTful API 
+git clone https://github.com/vmware/vsphere-automation-sdk-rest.git
+Post Man > import > samples/postman/vSphere-Automation-Rest-API-Appliance-Resources.postman.json
+
+docker rm $(docker ps -a -q)
+docker image prune # -a -f
+
+# dev
+docker-compose down
+docker-compose build
+docker-compose up 
+
+# Terraform container, commends 
+docker build -f terraform.Dockerfile \
+-t mauriziolupini/terraform .
+
+docker build -f terraform.Dockerfile -t mauriziolupini/terraform --build-arg ACCESS_KEY=... --build-arg SECRET_KEY=... --build-arg AWS_REGION=eu-west-1 .
+
+docker run -d -it \
+-e "ACCESS_KEY=..." \
+-e "SECRET_KEY=..." \
+-e "VSPHERE_ACCESS_KEY=..." \
+-e "VSPHERE_SECRET_KEY=..." \
+-e "AWS_REGION=eu-west-1" \
+mauriziolupini/terraform
+
+docker run -d -it \
+mauriziolupini/terraform
+
+docker exec -it id bash
+# copy command
+docker cp ./build/. 35:./terraform/app/
+
+
+##########################################################
+# TERRAFORM NEW STATE CONFIG WITH EXTERNAL DATA PROVIDER #
+##########################################################
+# # EXEC INTERACTIVE  
+# # docker exec -it iac_terra_1 bash
+
+cd /
+cd ./go/bin/
+mv terraform terraform_bak
+wget -q https://releases.hashicorp.com/terraform/0.12.9/terraform_0.12.9_linux_amd64.zip
+unzip terraform_0.12.9_linux_amd64.zip 
+
+##############
+#   CREATE   # 
+##############
+
+# DIR
+cd /
+cd ./terraform/app/aws/custom/state
+
+# INIT
+terraform init 
+terraform fmt
+terraform validate -json
+
+# ID
+deploymentId=`python3 ../../../util/deployment.py ready 5db3181d169cd3001dfd61ab`
+
+# PLAN
+terraform plan -var "id=${deploymentId}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}" -out ${deploymentId}-apply.tfplan -detailed-exitcode
+
+terraform show ${deploymentId}-apply.tfplan 
+
+# APPLY
+terraform apply ${deploymentId}-apply.tfplan
+
+# OUTPUT
+terraform output -json > ${deploymentId}-output.json
+
+# VERIFY / STATUS / CHECK OUTPUT FILE ABOVE - SUCCESS
+python3 ../../../util/deployment.py status ${deploymentId}
+
+
+###############
+#   DESTROY   #
+###############
+
+# DIR
+cd /
+cd ./terraform/app/aws/custom/state
+
+deploymentId=`python3 ../../../util/deployment.py destroy 5d975643857d8109c03287aa`
+
+# PLAN 
+terraform plan -destroy -var "id=${deploymentId}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}"  -out ${deploymentId}-destroy.tfplan -detailed-exitcode
+terraform show ${deploymentId}-destroy.tfplan 
+# terraform destroy -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}"
+
+# APPLY
+terraform apply ${deploymentId}-destroy.tfplan
+
+# OUTPUT 
+terraform output -json > ${deploymentId}-output.json
+
+# VERIFY / STATUS / CHECK OUTPUT FILE ABOVE - NULL - DESTROY
+python3 ../../../util/deployment.py status ${deploymentId}
+
+
+
+##############################################################
+#                   TERRAFORM VPC                            #
+##############################################################
+
+# NOTE: NEED TO TARGET BASED ON MODULE i.e. terraform plan --target=module.moduleName
+
+##############
+#   CREATE   # 
+##############
+
+# DIR
+cd /
+cd ./terraform/app/aws/modules/vpc
+
+deploymentId=`python3 ../../../util/deployment.py ready 5d975929857d8109c03287ba`
+BUCKET=`python3 ../../../util/deployment.py state ${deploymentId} S3`
+DYNAMODB_TABLE=`python3 ../../../util/deployment.py state ${deploymentId} DYN`
+DIR=`python3 ../../../util/deployment.py wsdir ${deploymentId}`
+
+# INIT
+terraform init -input=false \
+-backend-config="bucket=${BUCKET}" \
+-backend-config="dynamodb_table=${DYNAMODB_TABLE}" \
+-backend-config="access_key=${AWS_ACCESS_KEY}" \
+-backend-config="secret_key=${AWS_SECRET_KEY}" \
+-reconfigure
+terraform fmt
+terraform validate -json
+
+# WORKSPACE
+# # COMMENT BELOW AS WILL DEFAULT TO DEFAULT
+terraform workspace select ${DIR}
+terraform workspace new ${DIR}
+
+# PLAN
+terraform plan -var "id=${deploymentId}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}" -out ${deploymentId}-apply.tfplan -detailed-exitcode --target=module.vpc
+terraform show ${deploymentId}-apply.tfplan 
+
+# APPLY
+terraform apply ${deploymentId}-apply.tfplan 
+
+# GETTER
+terraform apply -var "id=${deploymentId}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}" --target=module.get_subnet
+
+# TODO CAN DO A SETTER OF RESOURCE NAMES ALIGNED WITH STANDARDS, OVER-FITTING 
+
+# OUTPUT 
+terraform output -json > ${deploymentId}-output.json
+
+# VERIFY - SEED
+python3 ../../../util/deployment.py seedMany ${deploymentId} aws_vpc_id logicalId vpc_resourceId
+
+# VERIFY / STATUS / CHECK OUTPUT FILE ABOVE - SUCCESS
+python3 ../../../util/deployment.py status ${deploymentId}
+
+
+###############
+#   DESTROY   #
+###############
+
+# DIR
+cd /
+cd ./terraform/app/aws/modules/vpc
+
+deploymentId=`python3 ../../../util/deployment.py destroy 5d975929857d8109c03287ba`
+BUCKET=`python3 ../../../util/deployment.py state ${deploymentId} S3`
+DYNAMODB_TABLE=`python3 ../../../util/deployment.py state ${deploymentId} DYN`
+DIR=`python3 ../../../util/deployment.py wsdir ${deploymentId}`
+
+# INIT
+terraform init -input=false \
+-backend-config="bucket=${BUCKET}" \
+-backend-config="dynamodb_table=${DYNAMODB_TABLE}" \
+-backend-config="access_key=${AWS_ACCESS_KEY}" \
+-backend-config="secret_key=${AWS_SECRET_KEY}" \
+-reconfigure
+terraform fmt
+terraform validate -json
+
+# WORKSPACE
+terraform workspace select ${DIR}
+
+# PLAN
+terraform plan -destroy -var "id=${deploymentId}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}" -out ${deploymentId}-destroy.tfplan -detailed-exitcode
+terraform show ${deploymentId}-destroy.tfplan 
+
+# APPLY
+terraform apply ${deploymentId}-destroy.tfplan 
+
+# OUTPUT
+terraform output -json > ${deploymentId}-output.json
+python3 ../../../util/deployment.py status ${deploymentId}
+
+# WORKSPACE, TODO VERIFY WHY ISSUES WHEN REMOVING WORKSPACE, LOCK ERROR
+terraform workspace select default
+terraform workspace delete ${DIR}
+# https://www.terraform.io/docs/commands/force-unlock.html
+# terraform force-unlock ${LOCK_INFO}
+
+
+##############################################################
+#                   TERRAFORM GET RESOURCES                  #
+##############################################################
+
+##############
+#   GET      # 
+##############
+
+# DIR
+cd /
+cd ./terraform/app/aws/get/subnet
+
+terraform init 
+terraform fmt
+terraform validate -json
+
+# GET, TEST USING vpcId FROM DEFAULT VPC
+terraform apply -var "vpcId=vpc-62ffe804" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}"
+
+
+##############################################################
+#                   EC2, EBS MAIN                            #
+##############################################################
+# NEED TO CREATE VPC SECURITY GROUP IN OWN MODULE 
+# NEED TO PERFORM DIRECTORY CLEAN UP THIS APPLIES TO MODULES ABOVE OF APPLY, DESTROY, OUTPUT, .TERRAFORM
+# REGEX FUNC MISSING FROM BASE DOCKER BUILD
+
+# TODO NEED INVESTIGATE ON HOW TO RUN EBS PLAN WITH FAILURE THAT IF COUNT 0 THAT IT JUST DOESN"T RUN. UNLESS FAILURE IS SUITABLE
+
+# TODO ISSUE WITH USING COMPLEX DATA TYPES, READ BELOW BREAK THROUGH
+# https://medium.com/@ty0h/preserving-json-object-keys-order-in-javascript-python-and-go-language-170eaae0de03
+
+##############
+#   CREATE   # 
+##############
+
+# DIR
+cd /
+cd ./terraform/app/aws/modules/ec2
+
+deploymentId=`python3 ../../../util/deployment.py ready 5d9ef9c9b4d594138c64a819`
+BUCKET=`python3 ../../../util/deployment.py state ${deploymentId} S3`
+DYNAMODB_TABLE=`python3 ../../../util/deployment.py state ${deploymentId} DYN`
+DIR=`python3 ../../../util/deployment.py wsdir ${deploymentId}`
+
+# INIT
+terraform init -input=false \
+-backend-config="bucket=${BUCKET}" \
+-backend-config="dynamodb_table=${DYNAMODB_TABLE}" \
+-backend-config="access_key=${AWS_ACCESS_KEY}" \
+-backend-config="secret_key=${AWS_SECRET_KEY}" \
+-reconfigure
+terraform fmt
+terraform validate -json
+
+# WORKSPACE
+terraform workspace select ${DIR}
+terraform workspace new ${DIR}
+
+# SSH-KEYGEN 
+ssh-keygen -f ${deploymentId}-key -q -N ''
+
+# LOAD PARAMS
+ec2_num=`python3 ../../../util/deployment.py resources ${deploymentId} EC2 resources count`
+ebs_num=`python3 ../../../util/deployment.py resources ${deploymentId} EBS resources count`
+unset CIDRS_RULE
+unset SG_RULE
+export CIDRS_RULE=`python3 ../../../util/deployment.py security ${deploymentId} rules EC2 cidr`
+export SG_RULE=`python3 ../../../util/deployment.py security ${deploymentId} rules EC2 sg`
+
+PHASE 1 SG
+terraform plan -var "id=${deploymentId}" -var "cidr_rule=${CIDRS_RULE}" -var "sg_rule=${SG_RULE}" -var "ec2_num=${ec2_num}"  -var "ebs_num=${ebs_num}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}" -out ${deploymentId}-apply.tfplan -detailed-exitcode --target=module.sg_1
+terraform show ${deploymentId}-apply.tfplan 
+terraform apply ${deploymentId}-apply.tfplan 
+terraform output -json > ${deploymentId}-output.json
+python3 ../../../util/deployment.py seedMany ${deploymentId} aws_security_group_id logicalId sg_resourceId
+
+# PHASE 2 EC2
+terraform plan -var "id=${deploymentId}" -var "cidr_rule=${CIDRS_RULE}" -var "sg_rule=${SG_RULE}" -var "ec2_num=${ec2_num}"  -var "ebs_num=${ebs_num}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}" -out ${deploymentId}-apply.tfplan -detailed-exitcode --target=module.ec2
+terraform show ${deploymentId}-apply.tfplan 
+terraform apply ${deploymentId}-apply.tfplan 
+terraform output -json > ${deploymentId}-output.json
+python3 ../../../util/deployment.py seedMany ${deploymentId} aws_instance_id logicalId ec2_resourceId
+
+# PHASE 3 EBS
+terraform plan -var "id=${deploymentId}" -var "cidr_rule=${CIDRS_RULE}" -var "sg_rule=${SG_RULE}" -var "ebs_num=${ebs_num}" -var "ec2_num=${ec2_num}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}" -out ${deploymentId}-apply.tfplan -detailed-exitcode --target=module.ebs
+terraform show ${deploymentId}-apply.tfplan 
+terraform apply ${deploymentId}-apply.tfplan 
+
+# POST ATTACH
+terraform output aws_eip
+terraform output deploymentId
+ssh ubuntu@52.212.205.65 -i 5d975bdd857d8109c03287be-key
+sudo -s
+lsblk
+sudo mkfs -t ext4 /dev/xvdg
+sudo mkfs -t ext4 /dev/xvdf
+cd /
+mkdir data0
+mkdir data1
+mount /dev/xvdf data0
+mount /dev/xvdg data1
+df -h
+# RDS BASTIAN 
+
+
+follow above to connect, note if public use EIP 
+cd /home/ubuntu/
+sudo apt-get install mysql-client
+cd /home/ubuntu/
+vi config.cnf
+[client]
+user = root
+password = CoffeeTea123
+host = rds-myloft-sbx-000019.ccv8evwawiyw.eu-west-1.rds.amazonaws.com:3306
+mysql -u root -p'CoffeeTea123' -h 'rds-myloft-sbx-000019.ccv8evwawiyw.eu-west-1.rds.amazonaws.com' demodb -e "show databases;"
+
+# VERIFY / STATUS / CHECK OUTPUT FILE ABOVE - SUCCESS
+python3 ../../../util/deployment.py status ${deploymentId}
+
+###############
+#   DESTROY   #
+###############
+
+# DIR
+cd /
+cd ./terraform/app/aws/modules/ec2
+
+deploymentId=`python3 ../../../util/deployment.py destroy 5d9ef9c9b4d594138c64a819`
+
+# WORKSPACE
+terraform workspace select ${DIR}
+
+# PLAN
+ec2_num=`python3 ../../../util/deployment.py resources ${deploymentId} EC2 resources count`
+ebs_num=`python3 ../../../util/deployment.py resources ${deploymentId} EBS resources count`
+unset CIDRS_RULE
+unset SG_RULE
+export CIDRS_RULE=`python3 ../../../util/deployment.py security ${deploymentId} rules EC2 cidr`
+export SG_RULE=`python3 ../../../util/deployment.py security ${deploymentId} rules EC2 sg`
+# SG
+# terraform plan -destroy -var "id=${deploymentId}" -var "cidr_rule=${CIDRS_RULE}" -var "sg_rule=${SG_RULE}" -var "ec2_num=${ec2_num}" -var "ebs_num=${ebs_num}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}" -out ${deploymentId}-destroy.tfplan -detailed-exitcode --target=module.sg_1
+# EC2
+# terraform plan -destroy -var "id=${deploymentId}" -var "cidr_rule=${CIDRS_RULE}" -var "sg_rule=${SG_RULE}" -var "ec2_num=${ec2_num}" -var "ebs_num=${ebs_num}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}" -out ${deploymentId}-destroy.tfplan -detailed-exitcode --target=module.ec2
+# EBS
+# terraform plan -destroy -var "id=${deploymentId}" -var "cidr_rule=${CIDRS_RULE}" -var "sg_rule=${SG_RULE}" -var "ec2_num=${ec2_num}" -var "ebs_num=${ebs_num}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}" -out ${deploymentId}-destroy.tfplan -detailed-exitcode --target=module.ebs
+# ALL 
+terraform plan -destroy -var "id=${deploymentId}" -var "cidr_rule=${CIDRS_RULE}" -var "sg_rule=${SG_RULE}" -var "ec2_num=${ec2_num}" -var "ebs_num=${ebs_num}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}" -out ${deploymentId}-destroy.tfplan -detailed-exitcode
+# APPLY 
+terraform apply ${deploymentId}-destroy.tfplan 
+
+terraform output -json > ${deploymentId}-output.json
+python3 ../../../util/deployment.py status ${deploymentId}
+
+# WORKSPACE, TODO VERIFY WHY ISSUES WHEN REMOVING WORKSPACE, LOCK ERROR
+terraform workspace select default
+terraform workspace delete ${DIR}
+# https://www.terraform.io/docs/commands/force-unlock.html
+# terraform force-unlock ${LOCK_INFO}
+
+
+##############################################################
+#                   Route 53                                 #
+##############################################################
+# TODO NEED TO PARAMETER VARIABLES 
+# TODO NEED TO ADD INTO TWO SEPARATE MODULES, ONE ZONE CREATION, TWO RECORD 
+# TODO NEED TO INCLUDE BACKEND AND ALIGN WITH MODULES ABOVE 
+
+##############
+#   CREATE   # 
+##############
+
+# DIR
+cd /
+cd ./terraform/app/aws/custom/r53
+
+deploymentId=`python3 ../../../util/deployment.py ready 5d8cd2caa04d152120ca913a`
+
+# INIT
+terraform init 
+terraform fmt
+terraform validate
+
+# PLAN
+terraform plan -var "id=${deploymentId}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}"
+terraform apply -var "id=${deploymentId}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}"
+terraform destroy -var "id=${deploymentId}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}"
+
+
+##############################################################
+#                   RDS                                      #
+##############################################################
+
+# # # # NEED A EXTERNAL DATA PROVIDER TO PROVIDE THE PRIVATE ZONE / BACKEND ZONE KEY WORDS AKA PUBLIC / PRIVATE 
+
+# TODO NEED TO PARAMETER VARIABLES 
+# TODO NEED TO ADD INTO TWO SEPARATE MODULES, ONE ZONE CREATION, TWO RECORD 
+# TODO NEED TO INCLUDE BACKEND AND ALIGN WITH MODULES ABOVE 
+
+>>>>>>> TO BE CONTINUED <<<<<<<<<<<
+# TODO NEED TO UPDATE WORKSPACES ABOVE WITH FUNC BELOW 
+# TODO NEED HAVE THE RULE DEFINED BY THE RDS ENGINE 
+# TODO NOTICED UNABLE TO DELETE SUCCESSFULLY WHEN, DEPLOYING WHEN MULTIPLE MODULES AND USING RESOURCES BETWEEN DIFFERENT RESOURCES, MIGHT REQUIRE A MAIN MODULE THAT WILL DEPLOY EC2 INSTANCE AND RDS INSTANCE WITHIN A SINGLE BLUEPRINT 
+# TODO ( perimeter= ) MIGHT ADD AS PART OF THE RDS RESOURCE 
+
+##############
+#   CREATE   # 
+##############
+
+# DIR
+cd /
+cd ./terraform/app/aws/modules/rds
+
+deploymentId=`python3 ../../../util/deployment.py ready 5d9ef9c9b4d594138c64a819`
+BUCKET=`python3 ../../../util/deployment.py state ${deploymentId} S3`
+DYNAMODB_TABLE=`python3 ../../../util/deployment.py state ${deploymentId} DYN`
+DIR=`python3 ../../../util/deployment.py wsdir ${deploymentId}`
+
+# INIT
+terraform init -input=false \
+-backend-config="bucket=${BUCKET}" \
+-backend-config="dynamodb_table=${DYNAMODB_TABLE}" \
+-backend-config="access_key=${AWS_ACCESS_KEY}" \
+-backend-config="secret_key=${AWS_SECRET_KEY}" \
+-reconfigure
+terraform fmt
+terraform validate -json
+
+# WORKSPACE
+terraform workspace select ${DIR}
+terraform workspace new ${DIR}
+
+# LOAD PARAMS
+unset CIDRS_RULE
+unset SG_RULE
+CIDRS_RULE=`python3 ../../../util/deployment.py security ${deploymentId} rules RDS cidr`
+export SG_RULE=`python3 ../../../util/deployment.py security ${deploymentId} rules RDS sg` 
+
+# PHASE 1 SUBNETS
+terraform plan -var "id=${deploymentId}" -var "cidr_rule=${CIDRS_RULE}" -var "sg_rule=${SG_RULE}" -var "perimeter=private" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}" -out ${deploymentId}-apply.tfplan --target=module.get_subnet
+terraform apply ${deploymentId}-apply.tfplan 
+
+# PHASE 3 SG
+terraform plan -var "id=${deploymentId}" -var "cidr_rule=${CIDRS_RULE}" -var "sg_rule=${SG_RULE}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}" -out ${deploymentId}-apply.tfplan --target=module.sg_1
+terraform apply ${deploymentId}-apply.tfplan 
+terraform output -json > ${deploymentId}-output.json
+python3 ../../../util/deployment.py seedMany ${deploymentId} aws_security_group_id logicalId sg_resourceId
+
+# PHASE 4 RDS
+# perimeter= MIGHT ADD AS PART OF THE RDS RESOURCE 
+terraform plan -var "id=${deploymentId}" -var "cidr_rule=${CIDRS_RULE}" -var "sg_rule=${SG_RULE}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}" -out ${deploymentId}-apply.tfplan --target=module.rds
+terraform apply ${deploymentId}-apply.tfplan 
+
+# PHASE 4 GET
+terraform plan -var "id=${deploymentId}" -var "cidr_rule=${CIDRS_RULE}" -var "sg_rule=${SG_RULE}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}" -out ${deploymentId}-apply.tfplan --target=module.get_rds
+terraform apply ${deploymentId}-apply.tfplan 
+terraform output -json > ${deploymentId}-output.json
+python3 ../../../util/deployment.py seedMany ${deploymentId} aws_db_instance_id logicalId rds_resourceId
+
+
+# DESTROY
+terraform plan -destroy -var "id=${deploymentId}" -var "cidr_rule=${CIDRS_RULE}" -var "sg_rule=${SG_RULE}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}" -out ${deploymentId}-destroy.tfplan --target=module.sg_1
+terraform apply ${deploymentId}-destroy.tfplan 
+terraform plan -destroy -var "id=${deploymentId}" -var "cidr_rule=${CIDRS_RULE}" -var "sg_rule=${SG_RULE}" -var "aws_access_key=${AWS_ACCESS_KEY}" -var "aws_secret_key=${AWS_SECRET_KEY}" -var "aws_region=${AWS_REGION}" -out ${deploymentId}-destroy.tfplan --target=module.rds
+terraform apply ${deploymentId}-destroy.tfplan 
+
+
+##############################################################
+#                   rds-aurora                               #
+##############################################################
+TBC...
+
+##############################################################
+#                   IAM                                      #
+##############################################################
+TBC...
+
+##############################################################
+#                   AUTO SCALE                               #
+##############################################################
+TBC...
+
+##############################################################
+#                   ALB/ELB                                  #
+##############################################################
+TBC...
+# Should just add to EC2 Module 
+
+##############################################################
+#                   Bean Stalk                               #
+##############################################################
+TBC...
+
+##############################################################
+#                   PACKER                                   #
+##############################################################
+TBC...
+
+##############################################################
+#                   JENKINS                                  #
+##############################################################
+# docker run jenkins/jenkins:lts
+# docker exec -it -u root tender_taussig bash
+# see dockerfile for instructions, other downloads
+export AWS_ACCESS_KEY=AKIAY6WHJSVX6ZIPXYZO
+export AWS_SECRET_KEY=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
+export AWS_REGION=eu-west-1
+export IAC_ENDPOINT_PROTOCOL=http
+export IAC_ENDPOINT_HOSTNAME=express
+export IAC_ENDPOINT_PORT=3001
+
+mkdir terraform
+mkdir terraform/app
+
+# host
+docker cp build/. tender_taussig:/terrafrom/app
