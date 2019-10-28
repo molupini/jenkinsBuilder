@@ -9,5 +9,5 @@ sandbox/
 .env/
 *.env
 TODO
-.cicd_vol/
+.jenkins_vol/
 .sock/
