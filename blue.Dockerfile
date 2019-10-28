@@ -13,17 +13,16 @@ RUN pip3 install requests
 RUN pip3 install fire
 RUN pip3 install awscli
 
+# TODO PLUGIN SPECIFIC SCRIPTS, WHEN PRODUCTION RELEASE WILL NEED TO ENSURE ALL IS AUTOMATED
+# RUN /usr/local/bin/install-plugins.sh terraform 
+# ansicolor blueocean nodejs oauth-credentials
+
+# TODO TINI FOR CLEAN SHUTDOWNS, VERIFY IF NECESSARY 
 # VERIFY IF NECESSARY
 # RUN apk add --no-cache tini
 
 # WORKDIR /terraform/app
 # ENTRYPOINT ["/sbin/tini", "--"]
-
-# PLUGIN SPECIFIC SCRIPTS 
-# RUN /usr/local/bin/install-plugins.sh terraform 
-# ansicolor blueocean nodejs oauth-credentials
-
-# TODO Need tini for clean shutdowns
 
 USER jenkins
 
