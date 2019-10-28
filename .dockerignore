@@ -9,3 +9,5 @@ sandbox/
 .env/
 *.env
 TODO
+.cicd_vol/
+.sock/

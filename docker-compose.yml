@@ -18,7 +18,9 @@ services:
     stdin_open: true
     tty: true
 
-  # TODO VERIFY BELOW IMAGES IF NECESSARY
+  # TODO VERIFY BELOW SERVICES IF NEEDED, FOR NOW NOT REQUIRED SERVICE ABOVE WILL CATER FOR ALL REQUIREMENTS
+  # > REMOVE WHEN PRODUCTION CODE IS RELEASED 
+
   # iac-jenkins:
   #     build:
   #       context: .

@@ -15,5 +15,5 @@ node_modules/
 **/crash.log
 package-lock.json*
 TODO.txt
-cicd_vol/
-.pkg/
+.cicd_vol/
+.sock/
