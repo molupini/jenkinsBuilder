@@ -86,11 +86,12 @@ $ docker-compose build
 $ docker-compose up
 ```
 
-Verify the deployment by navigating to your address in your preferred browser. Below is a example. 
+Verify the deployment by navigating to your address in your preferred browser. Enter the password in the requested location. 
 
 
 ```sh
 $ curl http://localhost:8080
+$ docker-compose exec iac-ocean-blue cat /var/jenkins_home/secrets/initialAdminPassword
 ```
 
 For prod, build:
