@@ -1,8 +1,8 @@
 pipeline{
     agent any
-    // tools {
-    //     "org.jenkinsci.plugins.terraform.TerraFormInstallation"
-    // }
+    tools {
+        // "org.jenkinsci.plugins.terraform.TerraFormInstallation"
+    }
     parameters {
         string(name: 'api_endpoint', defaultValue: '')
         string(name: 'workspace', defaultValue: '')

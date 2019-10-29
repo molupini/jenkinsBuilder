@@ -4,6 +4,8 @@ node_modules/
 **/*.terraform/
 .sandbox/
 .env/
+.key/
+**/*.env
 .vscode/
 **/*.tfstate
 **/*.tfstate.backup
@@ -18,3 +20,4 @@ package-lock.json*
 TODO.txt
 .jenkins_vol/
 .sock/
+.sandbox/

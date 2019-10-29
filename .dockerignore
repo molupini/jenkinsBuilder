@@ -4,6 +4,8 @@ node_modules/
 # *.tfstate
 # *.tfplan
 .git/
+.key/
+**/*.env
 .vscode/
 postman/
 sandbox/
@@ -12,3 +14,4 @@ sandbox/
 TODO
 .jenkins_vol/
 .sock/
+.sandbox/
