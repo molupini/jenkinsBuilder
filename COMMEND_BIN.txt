@@ -120,10 +120,14 @@ python3 ../../../util/deployment.py status ${deploymentId}
 cd /
 cd ./terraform/app/aws/modules/vpc
 
-deploymentId=`python3 ../../../util/deployment.py ready 5d975929857d8109c03287ba`
+deploymentId=`python3 ../../../util/deployment.py ready 5dbadb1a7bc9d7001e92ee2d`
 BUCKET=`python3 ../../../util/deployment.py state ${deploymentId} S3`
 DYNAMODB_TABLE=`python3 ../../../util/deployment.py state ${deploymentId} DYN`
 DIR=`python3 ../../../util/deployment.py wsdir ${deploymentId}`
+
+deploymentId=5dbadb1a7bc9d7001e92ee2d
+BUCKET=`python3 ./util/helper.py state ${deploymentId} S3`
+DYNAMODB_TABLE=`python3 ./util/helper.py state ${deploymentId} DYN`
 
 # INIT
 terraform init -input=false \
@@ -246,7 +250,7 @@ terraform apply -var "vpcId=vpc-62ffe804" -var "aws_access_key=${AWS_ACCESS_KEY}
 cd /
 cd ./terraform/app/aws/modules/ec2
 
-deploymentId=`python3 ../../../util/deployment.py ready 5d9ef9c9b4d594138c64a819`
+deploymentId=`python3 ../../../util/deployment.py ready 5db8b63ea67b8000241f8ea2`
 BUCKET=`python3 ../../../util/deployment.py state ${deploymentId} S3`
 DYNAMODB_TABLE=`python3 ../../../util/deployment.py state ${deploymentId} DYN`
 DIR=`python3 ../../../util/deployment.py wsdir ${deploymentId}`
