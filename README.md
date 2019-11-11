@@ -1,4 +1,4 @@
-# IAC BUILDER
+# Jenkins IaC Builder
 
 [![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/)
 
@@ -87,8 +87,6 @@ $ docker-compose up
 ```
 
 Verify the deployment by navigating to your address in your preferred browser. Enter the password in the requested location. 
-
-
 ```sh
 $ curl http://localhost:8080
 $ docker-compose exec iac-ocean-blue cat /var/jenkins_home/secrets/initialAdminPassword
@@ -111,13 +109,37 @@ $ docker pull mauriziolupini/iac-ocean-blue:prod
 
 Run prod, either docker run:
 ```sh
-docker network create --driver bridge ns_network
-docker run -d --net=ns_network --name ns-mongo --hostname ns-mongo -e "AWS_ACCESS_KEY=" -e "AWS_SECRET_KEY=" -e "AWS_REGION=" -e "IAC_ENDPOINT_PROTOCOL=" -e "IAC_ENDPOINT_HOSTNAME=" -e "IAC_ENDPOINT_PORT=" -p 37017:27017 mauriziolupini/ns-mongo:prod
+docker network create --driver bridge jenkins_network
+docker run -d --net=iac_network --name iac-mongo --hostname iac-mongo -e "AWS_ACCESS_KEY=" -e "AWS_SECRET_KEY=" -e "AWS_REGION=" -e "IAC_ENDPOINT_PROTOCOL=" -e "IAC_ENDPOINT_HOSTNAME=" -e "IAC_ENDPOINT_PORT=" -p 8080:8080 mauriziolupini/iac-ocean-blue:prod
 ```
 
 Run prod, or docker swarm:
 ```sh
-docker stack deploy -c iacbuilder.yml NS
+docker stack deploy -c iacbuilder.yml IAC
+```
+
+
+### *Git
+[git] is a distributed version-control system for tracking changes in source code during software development.
+Pre-installed within *iac-ocean-blue, ...* will require ssh authentication. Follow, https://docs.gitlab.com/ee/ssh/ 
+Used majority of pipeline(s). 
+
+Option 1. 
+New ssh key *must add to added to git repository*, local machine
+See example below, preferred
+
+```sh
+$ ssh-keygen -t rsa -b 4096 -C "maurizio.lupini@bcx.co.za" -f ./.key/service_id_rsa
+$ xclip -sel clip < ./.jenkins_vol/.ssh/service_id_rsa.pub
+$ docker cp .key/. iacbuilder_iac-ocean-blue_1:/root/.ssh/.
+```
+
+Or 
+Option 2. 
+Existing ssh key *must add to added to git repository*, copy to container
+See example below 
+```sh
+$ docker cp ./.key/. iacbuilder_iac-ocean-blue_1:/var/jenkins_home/.ssh/.
 ```
 
 
@@ -131,12 +153,10 @@ See [KUBERNETES.md] coming soon.
   - TBD.
 
 
-# Operating
-coming soon. 
-
 # License
 
 MIT
+
 
 # Author
 **Want to contribute? Great! See repo [git-repo-url] from [Maurizio Lupini][mo]    -Author, Working at [...][linkIn]**
@@ -148,3 +168,4 @@ MIT
    [python]: <https://www.python.org/>
    [jenkins]: <https://jenkins.io/
    [terraform]: <https://www.terraform.io/>
+   [git]: <https://git-scm.com/>
