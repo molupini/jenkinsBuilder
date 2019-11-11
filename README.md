@@ -9,14 +9,14 @@ Powered by Jenkins and Terraform.
   - Login to Jenkins
   - Use build pipelines
 
-# Features
+## Features
 
 You can:
   - Build, release infrastructure
   - Life-cycle management
   
 
-# Tech
+## Tech
 
 iac-builder uses a number of open source projects to work properly:
 
@@ -24,7 +24,7 @@ iac-builder uses a number of open source projects to work properly:
 * [jenkins] - open source continuous integration and continuous delivery, automation tool.
 * [terraform] - open-source infrastructure as code software tool.
 
-# Installation
+## Installation
 
 
 #### Install
@@ -73,7 +73,7 @@ IAC_ENDPOINT_PORT=3001
 ```
 
 
-### Deploy
+#### Deploy
 
 Easily done in a Docker container.
 Make required changes within Dockerfile + compose files if necessary. When ready, simply use docker-compose to build your environment.
@@ -119,17 +119,17 @@ docker stack deploy -c iacbuilder.yml IAC
 ```
 
 
-#### Kubernetes + Google Cloud
+## Kubernetes + Google Cloud
 
 See [KUBERNETES.md] coming soon.
 
 
-# Future Release
+## Future Release
 
   - TBD.
 
 
-### Instructions
+## Instructions
 
 #### GIT
 *POST BUILD REQUIREMENT*
@@ -155,12 +155,12 @@ See example below
 $ docker cp ./.key/. iacbuilder_iac-ocean-blue_1:/var/jenkins_home/.ssh/.
 ```
 
-# License
+### License
 
 MIT
 
 
-# Author
+### Author
 **Want to contribute? Great! See repo [git-repo-url] from [Maurizio Lupini][mo]    -Author, Working at [...][linkIn]**
 
 
