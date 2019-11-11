@@ -1,7 +1,7 @@
 FROM jenkinsci/blueocean:latest as base
 
 ENV PORT=8080
-ENV TERRAFORM_INST_VERSION=0.12.12
+ENV TERRAFORM_INST_VERSION=0.12.13
 ENV PACKER_INST_VERSION=1.4.4
 ENV TZ=Africa/Johannesburg
 ENV ROOT_EMAIL=maurizio.lupini@bcx.co.za

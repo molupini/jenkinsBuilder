@@ -10,7 +10,7 @@ services:
       - 8080:8080
       - 50000:50000
     volumes:
-      - ./build/.:/terraform/app
+      # - ./build/.:/terraform/app
       - ./.jenkins_vol:/var/jenkins_home
       - ./.sock:/var/run/docker.sock
     env_file:

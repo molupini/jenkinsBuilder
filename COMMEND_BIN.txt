@@ -302,7 +302,7 @@ terraform apply ${deploymentId}-apply.tfplan
 # POST ATTACH
 terraform output aws_eip
 terraform output deploymentId
-ssh ubuntu@52.212.205.65 -i 5d975bdd857d8109c03287be-key
+ssh -R ubuntu@52.212.205.65 -i 5d975bdd857d8109c03287be-key
 sudo -s
 lsblk
 sudo mkfs -t ext4 /dev/xvdg
@@ -318,14 +318,8 @@ df -h
 
 follow above to connect, note if public use EIP 
 cd /home/ubuntu/
-sudo apt-get install mysql-client
-cd /home/ubuntu/
-vi config.cnf
-[client]
-user = root
-password = CoffeeTea123
-host = rds-myloft-sbx-000019.ccv8evwawiyw.eu-west-1.rds.amazonaws.com:3306
-mysql -u root -p'CoffeeTea123' -h 'rds-myloft-sbx-000019.ccv8evwawiyw.eu-west-1.rds.amazonaws.com' demodb -e "show databases;"
+sudo apt-get install mysql-client -y
+mysql -u root -p'CoffeeTea123' -h 'rds-myloft-sbx-000002.ccv8evwawiyw.eu-west-1.rds.amazonaws.com' demodb -e "show databases;"
 
 # VERIFY / STATUS / CHECK OUTPUT FILE ABOVE - SUCCESS
 python3 ../../../util/deployment.py status ${deploymentId}
