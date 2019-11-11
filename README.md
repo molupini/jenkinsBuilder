@@ -119,8 +119,9 @@ docker stack deploy -c iacbuilder.yml IAC
 ```
 
 
-### Git
+### Git 
 *POST BUILD REQUIREMENT*
+
 [git] is a distributed version-control system for tracking changes in source code during software development.
 Pre-installed within *iac-ocean-blue, ...* will require ssh authentication. Follow, https://docs.gitlab.com/ee/ssh/ 
 Used majority of pipeline(s). 
@@ -135,7 +136,6 @@ $ xclip -sel clip < ./.jenkins_vol/.ssh/service_id_rsa.pub
 $ docker cp .key/. iacbuilder_iac-ocean-blue_1:/root/.ssh/.
 ```
 
-Or 
 Option 2. 
 Existing ssh key *must add to added to git repository*, copy to container
 See example below 
