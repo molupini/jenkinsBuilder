@@ -47,7 +47,7 @@ $ git clone git@gitlab.com:bcx-sanlam-group/iacbuilder.git
 Forth:
 ```sh
 $ mkdir ./.jenkins_vol
-$ mkdir ./.sock
+# $ mkdir ./.sock
 ```
 
 #### Author
@@ -131,28 +131,45 @@ See [KUBERNETES.md] coming soon.
 
 ## Instructions
 
-#### GIT
-*POST BUILD REQUIREMENT*
+#### 1. GIT
+*AWAIT POST BUILD, PLUG-IN INSTALLATION AND RESTART OF CONTAINER*
 
 [git] is a distributed version-control system for tracking changes in source code during software development.
-Pre-installed within *iac-ocean-blue, ...* will require ssh authentication. Follow, https://docs.gitlab.com/ee/ssh/ 
+Pre-installed within *iac-ocean-blue, ...* will require ssh authentication. 
+Follow, https://docs.gitlab.com/ee/ssh/; https://gitlab.com/help/ssh/README#generating-a-new-ssh-key-pair
 Used majority of pipeline(s). 
 
-Option 1. 
-New ssh key *must add to added to git repository*, local machine
+New ssh key *must add to added to git repository*, within container
 See example below, preferred
 
 ```sh
-$ ssh-keygen -t rsa -b 4096 -C "maurizio.lupini@bcx.co.za" -f ./.key/service_id_rsa
-$ xclip -sel clip < ./.jenkins_vol/.ssh/service_id_rsa.pub
-$ docker cp .key/. iacbuilder_iac-ocean-blue_1:/root/.ssh/.
+# ACCEPT DEFAULT FILE PATH 
+# jenkins container will login with the same user. 
+$ docker exec -it iacbuilder_iac-ocean-blue_1 bash
+# ED25519 SSH KEYS ARE PREFERRED AND BEST PRACTICE. 
+$ ssh-keygen -t ed25519 -C "mlupini.dev@gmail.com"
+# RSA WHICH ONLY RECOMMENDED IF ISSUES WITH ABOVE. 
+# $ ssh-keygen -o -t rsa -b 4096 -C "mlupini.dev@gmail.com" 
+# ADD BELOW OUTPUT TO YOUR GIT REPO
+$ cat /var/jenkins_home/.ssh/id_rsa.pub
+# VERIFY SSH CONNECTIVITY 
+$ ssh -T ssh@gitlab.com
 ```
 
 Option 2. 
 Existing ssh key *must add to added to git repository*, copy to container
+Follow, https://gitlab.com/help/ssh/README#generating-a-new-ssh-key-pair
 See example below 
 ```sh
 $ docker cp ./.key/. iacbuilder_iac-ocean-blue_1:/var/jenkins_home/.ssh/.
+```
+
+#### 2. PERMISSION
+Assign permissions, Using chown command to change the user/group ownership of the *jenkins_home* directory.
+If not followed you can expect to get the following Error, *java.nio.file.AccessDeniedException: /var/jenkins_home/workspace/item-name*
+
+```
+$ docker exec -u root iacbuilder_iac-ocean-blue_1 chown -R jenkins:jenkins /var/jenkins_home
 ```
 
 ### License

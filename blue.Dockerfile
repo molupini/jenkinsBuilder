@@ -24,13 +24,13 @@ RUN unzip terraform_${TERRAFORM_INST_VERSION}_linux_amd64.zip
 RUN wget -q https://releases.hashicorp.com/packer/${PACKER_INST_VERSION}/packer_${PACKER_INST_VERSION}_linux_amd64.zip
 RUN unzip packer_${PACKER_INST_VERSION}_linux_amd64.zip 
 
-# GIVE JENKINS USER ACCESS TO WORKSPACE 
-WORKDIR /var/jenkins_home/workspace
-RUN chown -R jenkins:jenkins /var/jenkins_home/workspace
+# GIVE JENKINS USER ACCESS TO JENKINS_HOME 
+# RUN chown -R jenkins:jenkins /var/jenkins_home
 
-# SWITCH TO DEFAULT USER, ISSUE ENCOUNTED WITH GIT ABOVE DID RESOLVE FOLDER ACCESS
-# RESOLVE BEFORE STEPPING INTO DEFAULT USER
-# USER jenkins
+WORKDIR /var/jenkins_home/workspace
+
+# SWITCH TO DEFAULT USER
+USER jenkins
 
 
 # dev

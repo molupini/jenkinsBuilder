@@ -11,8 +11,8 @@ services:
       - 50000:50000
     volumes:
       # - ./build/.:/terraform/app
+      # - ./.sock:/var/run/docker.sock
       - ./.jenkins_vol:/var/jenkins_home
-      - ./.sock:/var/run/docker.sock
     env_file:
       - ./.env/app.env
     stdin_open: true
