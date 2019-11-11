@@ -110,7 +110,7 @@ $ docker pull mauriziolupini/iac-ocean-blue:prod
 Run prod, either docker run:
 ```sh
 docker network create --driver bridge jenkins_network
-docker run -d --net=iac_network --name iac-mongo --hostname iac-mongo -e "AWS_ACCESS_KEY=" -e "AWS_SECRET_KEY=" -e "AWS_REGION=" -e "IAC_ENDPOINT_PROTOCOL=" -e "IAC_ENDPOINT_HOSTNAME=" -e "IAC_ENDPOINT_PORT=" -p 8080:8080 mauriziolupini/iac-ocean-blue:prod
+docker run -d --net=iac_network --name iac-builder --hostname iac-builder -e "AWS_ACCESS_KEY=" -e "AWS_SECRET_KEY=" -e "AWS_REGION=" -e "IAC_ENDPOINT_PROTOCOL=" -e "IAC_ENDPOINT_HOSTNAME=" -e "IAC_ENDPOINT_PORT=" -p 8080:8080 mauriziolupini/iac-ocean-blue:prod
 ```
 
 Run prod, or docker swarm:
