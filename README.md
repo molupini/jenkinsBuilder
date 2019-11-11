@@ -119,7 +119,8 @@ docker stack deploy -c iacbuilder.yml IAC
 ```
 
 
-### *Git
+### Git
+*POST BUILD REQUIREMENT*
 [git] is a distributed version-control system for tracking changes in source code during software development.
 Pre-installed within *iac-ocean-blue, ...* will require ssh authentication. Follow, https://docs.gitlab.com/ee/ssh/ 
 Used majority of pipeline(s). 
