@@ -119,7 +119,19 @@ docker stack deploy -c iacbuilder.yml IAC
 ```
 
 
-### Git 
+#### Kubernetes + Google Cloud
+
+See [KUBERNETES.md] coming soon.
+
+
+# Future Release
+
+  - TBD.
+
+
+### Instructions
+
+#### GIT
 *POST BUILD REQUIREMENT*
 
 [git] is a distributed version-control system for tracking changes in source code during software development.
@@ -142,17 +154,6 @@ See example below
 ```sh
 $ docker cp ./.key/. iacbuilder_iac-ocean-blue_1:/var/jenkins_home/.ssh/.
 ```
-
-
-#### Kubernetes + Google Cloud
-
-See [KUBERNETES.md] coming soon.
-
-
-# Future Release
-
-  - TBD.
-
 
 # License
 
