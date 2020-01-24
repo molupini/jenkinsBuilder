@@ -54,7 +54,7 @@ Before we begin, required environment variables:
 ```sh
 $ vi ./.env/app.env
 # # TERRAFORM
-# SEED DOCKER FILE
+# SEE DOCKER FILE
 
 # # JENKINS
 TZ=Africa/Johannesburg
