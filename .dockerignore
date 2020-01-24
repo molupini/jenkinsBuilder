@@ -1,16 +1,11 @@
 node_modules/
 .terraform/
 **/*.terraform/
-# *.tfstate
-# *.tfplan
 .git/
-.key/
 **/*.env
 .vscode/
 postman/
 sandbox/
-.env/
-*.env
 TODO
 .jenkins_vol/
 .sock/

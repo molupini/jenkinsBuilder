@@ -1,9 +1,6 @@
-# Jenkins IaC Builder
+# Jenkins Container Service
 
-[![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/)
-
-Is a Infrastructure as Code Builder Pipeline Service.
-Powered by Jenkins and Terraform.
+Powered by Jenkins.
 
   - Deploy with docker-compose 
   - Login to Jenkins
@@ -12,20 +9,19 @@ Powered by Jenkins and Terraform.
 ## Features
 
 You can:
-  - Build, release infrastructure
-  - Life-cycle management
+  - Easy Configuration
+  - Available Plugins
+  - Extensible
+  - Easy Distribution
+  - Free Open Source
   
-
 ## Tech
 
-iac-builder uses a number of open source projects to work properly:
+Uses a number of open source projects to work properly:
 
-* [python] - programming language. 
 * [jenkins] - open source continuous integration and continuous delivery, automation tool.
-* [terraform] - open-source infrastructure as code software tool.
 
 ## Installation
-
 
 #### Install
 
@@ -33,21 +29,21 @@ Open your favorite Terminal and run these commands.
 
 First, if necessary:
 ```sh
-$ mkdir ./iac
+$ mkdir ./cicd 
 ```
 Second:
 ```sh
-$ git init
+$ git cicd
 ```
 Third:
 ```sh
-$ git clone git@gitlab.com:bcx-sanlam-group/iacbuilder.git
+$ git clone git@github.com:molupini/jenkinsBuiler.git
 ```
 
 Forth:
 ```sh
 $ mkdir ./.jenkins_vol
-# $ mkdir ./.sock
+$ mkdir ./.sock
 ```
 
 #### Author
@@ -56,20 +52,22 @@ Making any change in your source file will update immediately.
 
 Before we begin, required environment variables:
 ```sh
-$ vi ./.env/app.development.env
+$ vi ./.env/app.env
+# # TERRAFORM
+# SEED DOCKER FILE
 
 # # JENKINS
 TZ=Africa/Johannesburg
 
-# # JENKINS, TERRAFORM
+# # AWS
 AWS_ACCESS_KEY=?
 AWS_SECRET_KEY=?
-AWS_REGION=eu-west-1
+AWS_REGION=?
 
-# # JENKINS SERVICE, PYTHON SCRIPTS, NAME SERVICE
-IAC_ENDPOINT_PROTOCOL=http
-IAC_ENDPOINT_HOSTNAME=192.168.88.13
-IAC_ENDPOINT_PORT=3001
+# # PYTHON SCRIPTS, WEB SERVICES FOR IAC BUILDS 
+IAC_ENDPOINT_PROTOCOL=?
+IAC_ENDPOINT_HOSTNAME=?
+IAC_ENDPOINT_PORT=?
 ```
 
 
@@ -77,8 +75,7 @@ IAC_ENDPOINT_PORT=3001
 
 Easily done in a Docker container.
 Make required changes within Dockerfile + compose files if necessary. When ready, simply use docker-compose to build your environment.
-This will create the *iac-ocean-blue, ...* services with necessary dependencies.
-Once done, simply import postman.json into Postman:
+This will create the *ocean-blue, ...* services with necessary dependencies.
 
 For dev, docker compose:
 ```sh
@@ -89,33 +86,33 @@ $ docker-compose up
 Verify the deployment by navigating to your address in your preferred browser. Enter the password in the requested location. 
 ```sh
 $ curl http://localhost:8080
-$ docker-compose exec iac-ocean-blue cat /var/jenkins_home/secrets/initialAdminPassword
+$ docker-compose exec ocean-blue cat /var/jenkins_home/secrets/initialAdminPassword
 ```
 
 For prod, build:
 ```sh
-$ docker build -f blue.Dockerfile -t mauriziolupini/iac-ocean-blue:prod .
+$ docker build -f blue.Dockerfile -t mauriziolupini/ocean-blue:prod .
 ```
 
 Commit prod, push docker builds:
 ```sh
-$ docker push mauriziolupini/iac-ocean-blue:prod
+$ docker push mauriziolupini/ocean-blue:prod
 ```
 
 Get prod, pull docker builds:
 ```sh
-$ docker pull mauriziolupini/iac-ocean-blue:prod
+$ docker pull mauriziolupini/ocean-blue:prod
 ```
 
 Run prod, either docker run:
 ```sh
 docker network create --driver bridge jenkins_network
-docker run -d --net=iac_network --name iac-builder --hostname iac-builder -e "AWS_ACCESS_KEY=" -e "AWS_SECRET_KEY=" -e "AWS_REGION=" -e "IAC_ENDPOINT_PROTOCOL=" -e "IAC_ENDPOINT_HOSTNAME=" -e "IAC_ENDPOINT_PORT=" -p 8080:8080 mauriziolupini/iac-ocean-blue:prod
+docker run -d -p 8080:8080 mauriziolupini/ocean-blue:prod
 ```
 
 Run prod, or docker swarm:
 ```sh
-docker stack deploy -c iacbuilder.yml IAC
+docker stack deploy -c builder.yml IAC
 ```
 
 
@@ -130,22 +127,24 @@ See [KUBERNETES.md] coming soon.
 
 
 ## Instructions
+If making use of a private [git] repository. 
 
 #### 1. GIT
 *AWAIT POST BUILD, PLUG-IN INSTALLATION AND RESTART OF CONTAINER*
 
 [git] is a distributed version-control system for tracking changes in source code during software development.
-Pre-installed within *iac-ocean-blue, ...* will require ssh authentication. 
+Pre-installed within *ocean-blue, ...* will require ssh authentication. 
 Follow, https://docs.gitlab.com/ee/ssh/; https://gitlab.com/help/ssh/README#generating-a-new-ssh-key-pair
+Note, similar with GitHub
 Used majority of pipeline(s). 
 
-New ssh key *must add to added to git repository*, within container
+New ssh key *must add to git repository*, within container
 See example below, preferred
 
 ```sh
 # ACCEPT DEFAULT FILE PATH 
 # jenkins container will login with the same user. 
-$ docker exec -it iacbuilder_iac-ocean-blue_1 bash
+$ docker exec -it ocean-blue_1 bash
 # ED25519 SSH KEYS ARE PREFERRED AND BEST PRACTICE. 
 $ ssh-keygen -t ed25519 -C "mlupini.dev@gmail.com"
 # RSA WHICH ONLY RECOMMENDED IF ISSUES WITH ABOVE. 
@@ -156,20 +155,20 @@ $ cat /var/jenkins_home/.ssh/id_rsa.pub
 $ ssh -T ssh@gitlab.com
 ```
 
-Option 2. 
-Existing ssh key *must add to added to git repository*, copy to container
+Option 2, ignore as above preferred. 
+Existing ssh key *must add to git repository*, copy to container
 Follow, https://gitlab.com/help/ssh/README#generating-a-new-ssh-key-pair
 See example below 
 ```sh
-$ docker cp ./.key/. iacbuilder_iac-ocean-blue_1:/var/jenkins_home/.ssh/.
+$ docker cp ./.key/. ocean-blue_1:/var/jenkins_home/.ssh/.
 ```
 
 #### 2. PERMISSION
 Assign permissions, Using chown command to change the user/group ownership of the *jenkins_home* directory.
-If not followed you can expect to get the following Error, *java.nio.file.AccessDeniedException: /var/jenkins_home/workspace/item-name*
+If not followed you can expect to get the following Error, *java.nio.file.AccessDeniedException: /var/jenkins_home/workspace/item-name* with your pipelines
 
 ```
-$ docker exec -u root iacbuilder_iac-ocean-blue_1 chown -R jenkins:jenkins /var/jenkins_home
+$ docker exec -u root ocean-blue_1 chown -R jenkins:jenkins /var/jenkins_home
 ```
 
 ### License
@@ -183,7 +182,7 @@ MIT
 
    [mo]: <https://github.com/molupini>
    [linkIn]: <https://za.linkedin.com/in/mauriziolupini>
-   [git-repo-url]: <https://gitlab.com/bcx-sanlam-group/nameservice.git>
+   [git-repo-url]: <git@github.com:molupini/jenkinsBuiler.git>
    [python]: <https://www.python.org/>
    [jenkins]: <https://jenkins.io/
    [terraform]: <https://www.terraform.io/>
