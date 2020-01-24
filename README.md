@@ -128,9 +128,7 @@ See [KUBERNETES.md] coming soon.
 
 ## Instructions
 If making use of a private [git] repository. 
-
-#### 1. GIT
-*AWAIT POST BUILD, PLUG-IN INSTALLATION AND RESTART OF CONTAINER*
+*await plug-in installation, container restart*
 
 [git] is a distributed version-control system for tracking changes in source code during software development.
 Pre-installed within *ocean-blue, ...* will require ssh authentication. 
@@ -138,9 +136,10 @@ Follow, https://docs.gitlab.com/ee/ssh/; https://gitlab.com/help/ssh/README#gene
 Note, similar with GitHub
 Used majority of pipeline(s). 
 
+Two options
+1. 
 New ssh key *must add to git repository*, within container
 See example below, preferred
-
 ```sh
 # ACCEPT DEFAULT FILE PATH 
 # jenkins container will login with the same user. 
@@ -155,7 +154,7 @@ $ cat /var/jenkins_home/.ssh/id_rsa.pub
 $ ssh -T ssh@gitlab.com
 ```
 
-Option 2, ignore as above preferred. 
+2. 
 Existing ssh key *must add to git repository*, copy to container
 Follow, https://gitlab.com/help/ssh/README#generating-a-new-ssh-key-pair
 See example below 
@@ -163,7 +162,7 @@ See example below
 $ docker cp ./.key/. ocean-blue_1:/var/jenkins_home/.ssh/.
 ```
 
-#### 2. PERMISSION
+3. 
 Assign permissions, Using chown command to change the user/group ownership of the *jenkins_home* directory.
 If not followed you can expect to get the following Error, *java.nio.file.AccessDeniedException: /var/jenkins_home/workspace/item-name* with your pipelines
 
